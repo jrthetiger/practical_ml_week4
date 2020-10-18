@@ -103,7 +103,8 @@ conf_GBM
 ```
 
 ## Conclusion
-The Random Forest model has slightly higher accuracy (.9978) than GBM (.9866). Hence, Random Forest model will be used for the final prediction.
+
+The Random Forest model has slightly higher accuracy (99.78% out of sample accuracy) than GBM (98.66% out of sample accuracy). Hence, Random Forest model will be used for the final prediction.
                 
 ```{r predict, echo=T}
 predictTEST <- predict(RF_mod, newdata=testing)

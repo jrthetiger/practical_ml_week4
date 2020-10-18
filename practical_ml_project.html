@@ -561,7 +561,7 @@ conf_GBM</code></pre>
 </div>
 <div id="conclusion" class="section level2">
 <h2>Conclusion</h2>
-<p>The Random Forest model has slightly higher accuracy (.9978) than GBM (.9866). Hence, Random Forest model will be used for the final prediction.</p>
+<p>The Random Forest model has slightly higher accuracy (99.78% out of sample accuracy) than GBM (98.66% out of sample accuracy). Hence, Random Forest model will be used for the final prediction.</p>
 <pre class="r"><code>predictTEST &lt;- predict(RF_mod, newdata=testing)
 predictTEST</code></pre>
 <pre><code>##  [1] B A B A A E D B A A B C B A E E A B B B
