@@ -1,0 +1,111 @@
+---
+title: "Predicting Activity Classe"
+output: html_document
+---
+
+## Introduction
+
+The goal of this project is to use data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants to predict the manner in which they did the exercise.
+
+## Data Description
+The training data for this project are available here:
+
+https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv
+
+The test data are available here:
+
+https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv
+
+The data for this project come from this source: http://web.archive.org/web/20161224072740/http:/groupware.les.inf.puc-rio.br/har.
+
+## Data Preparation
+
+```{r libraries and datasets, echo=T}
+# Load libraries
+library(knitr)
+library(caret)
+library(rpart)
+library(rpart.plot)
+library(randomForest)
+library(corrplot)
+
+set.seed(124)
+
+# Set the URL for the download
+UrlTrain <- "http://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv"
+UrlTest  <- "http://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv"
+
+# Download the datasets
+training <- read.csv(url(UrlTrain))
+testing  <- read.csv(url(UrlTest))
+
+# Create a partition with the training dataset 
+inTrain  <- createDataPartition(training$classe, p=0.7, list=FALSE)
+TrainSet <- training[inTrain, ]
+TestSet  <- training[-inTrain, ]
+# Check dimensions
+dim(TrainSet)
+dim(TestSet)
+
+# Remove variables with Nearly Zero Variance
+NZV <- nearZeroVar(TrainSet)
+TrainSet <- TrainSet[, -NZV]
+TestSet  <- TestSet[, -NZV]
+# Check dimensions
+dim(TrainSet)
+dim(TestSet)
+
+# Remove variables that are mostly NA
+AllNA    <- sapply(TrainSet, function(x) mean(is.na(x))) > 0.95
+TrainSet <- TrainSet[, AllNA==FALSE]
+TestSet  <- TestSet[, AllNA==FALSE]
+# Check dimensions
+dim(TrainSet)
+dim(TestSet)
+
+# Remove identification only variables (columns 1 to 5)
+TrainSet <- TrainSet[, -(1:5)]
+TestSet  <- TestSet[, -(1:5)]
+# Check dimensions
+dim(TrainSet)
+dim(TestSet)
+```
+## Model option 1: Random Forest
+
+```{r random forest, echo=T}
+# Fit the model
+controlRF <- trainControl(method="cv", number=3, verboseIter=F)
+RF_mod <- train(classe ~ ., data=TrainSet, method="rf",
+                          trControl=controlRF)
+RF_mod$finalModel
+
+# Prediction on test dataset
+predict_RF <- predict(RF_mod, newdata=TestSet)
+# Confusion Matrix
+conf_RF <- confusionMatrix(table(predict_RF, TestSet$classe))
+conf_RF
+
+```
+
+## Model Option #2: GBM
+```{r gbm, echo=T}
+# Fit the model
+controlGBM <- trainControl(method = "repeatedcv", number = 5, repeats = 1)
+GBM_mod  <- train(classe ~ ., data=TrainSet, method = "gbm",
+                    trControl = controlGBM, verbose = F)
+GBM_mod$finalModel
+
+# prediction on Test dataset
+predict_GBM <- predict(GBM_mod, newdata=TestSet)
+conf_GBM <- confusionMatrix(table(predict_GBM, TestSet$classe))
+conf_GBM
+
+```
+
+## Conclusion
+The Random Forest model has slightly higher accuracy (.9978) than GBM (.9866). Hence, Random Forest model will be used for the final prediction.
+                
+```{r predict, echo=T}
+predictTEST <- predict(RF_mod, newdata=testing)
+predictTEST
+```
